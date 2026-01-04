@@ -1,0 +1,153 @@
+Absolutely! Since you have built a multi-agent conversational system using LangGraph, LangChain, Azure OpenAI, and DeepEval for evaluation, we can craft architect-level interview questions that hit design decisions, trade-offs, and scaling. I’ll provide 10 top questions along with concise, clear answers.
+
+1. Can you explain the architecture of your multi-agent system?
+
+Answer:
+
+We implemented a tiered agent architecture:
+
+Tier-1 Agent: Handles straightforward queries with retrieval or prompt-based responses.
+
+Tier-2 Escalation Agent: Triggered when Tier-1 confidence is below a threshold; generates more detailed answers.
+
+Manager/Audit Agent: Evaluates responses from previous tiers for approval, formatting, and compliance.
+
+LangGraph orchestrates agent interactions and routes queries based on confidence.
+
+DeepEval is used for evaluating answer relevancy and collaboration between agents.
+
+The flow ensures progressive enhancement of responses while maintaining control via the Manager agent.
+
+2. How does LangGraph help in agent orchestration?
+
+Answer:
+
+LangGraph provides a state machine abstraction for managing multi-step workflows.
+
+Each agent is a node; transitions are determined by conditional edges (e.g., confidence thresholds).
+
+This allows dynamic routing of queries based on runtime metrics without hardcoding flow logic.
+
+Agents can be added or replaced easily, improving modularity and maintainability.
+
+3. How do you decide which agent handles a query?
+
+Answer:
+
+Tier-1 agent handles all incoming queries.
+
+Confidence score is computed for the Tier-1 response.
+
+If confidence < threshold → query escalates to Tier-2 agent.
+
+Tier-2 may generate detailed answers; final decision is sent to Manager/Audit agent for approval.
+
+Routing logic is implemented in route_based_on_confidence.
+
+4. How do you calculate the confidence score?
+
+Answer:
+
+We calculate confidence as a similarity measure between the query and retrieved context or Tier-1 answer.
+
+Formula can include:
+
+Cosine similarity with embeddings (e.g., HuggingFace embeddings).
+
+Scaling via a sigmoid or min-max normalization.
+
+Confidence guides conditional routing in the multi-agent graph.
+
+5. How is the Manager/Audit agent different from Tier-2?
+
+Answer:
+
+Tier-2 improves answer content when Tier-1 fails.
+
+Manager/Audit validates, formats, or approves responses:
+
+Checks thresholds, content compliance, formatting, and reasoning.
+
+Marks responses as approved or needs_review.
+
+Acts as a safety and quality layer in the workflow.
+
+6. How did you evaluate your multi-agent system?
+
+Answer:
+
+Used DeepEval, an evaluation framework for LLM outputs:
+
+Answer relevancy metric: Evaluates whether agents’ responses answer the question accurately.
+
+Collaboration metric: Measures how Tier-1, Tier-2, and Manager collectively produce better results.
+
+Evaluation ensures that escalation and orchestration logic improves response quality.
+
+7. How did you integrate Azure OpenAI in your system?
+
+Answer:
+
+LLMs are wrapped via get_llm(), configured for Azure OpenAI endpoints.
+
+Used environment variables for:
+
+AZURE_OPENAI_KEY → API key
+
+AZURE_OPENAI_ENDPOINT → Deployment endpoint
+
+MODEL_DEPLOYMENT → e.g., gpt-4o
+
+Ensures centralized LLM access for all agents while maintaining security.
+
+8. How do you handle failures or invalid agent responses?
+
+Answer:
+
+Each agent returns a structured output, usually a dict with answer and confidence.
+
+LangGraph throws InvalidUpdateError if node output is invalid → we catch and log these errors.
+
+Manager agent can mark responses needs_review if confidence or quality is low.
+
+Optionally, failed responses can fallback to human review or logging for offline correction.
+
+9. How is this system modular and scalable?
+
+Answer:
+
+Agents are independent nodes; can be replaced or updated without affecting others.
+
+Routing logic is separate from agent implementation.
+
+Adding more tiers or specialized agents is easy:
+
+Just add a new node and update conditional edges.
+
+LangGraph handles asynchronous invocation of agents, enabling horizontal scaling.
+
+Evaluation is decoupled via DeepEval → supports continuous improvement.
+
+10. What were key architecture/design decisions and trade-offs?
+
+Answer:
+
+Tiered agents for progressive enhancement → reduces errors at first stage, but increases latency slightly.
+
+Manager/Audit layer → ensures quality, at the cost of additional complexity.
+
+LangGraph orchestration → flexible flow management, but requires proper return types and error handling.
+
+Azure OpenAI integration → enterprise-ready, but DeepEval compatibility required custom handling.
+
+Evaluation with DeepEval → allows automated validation of multi-agent collaboration.
+
+✅ Bonus Tips for Interview:
+
+Emphasize modularity, maintainability, and observability.
+
+Talk about confidence-based routing and progressive enhancement.
+
+Mention handling Azure-specific challenges with DeepEval.
+
+Explain trade-offs in latency vs. answer quality.
